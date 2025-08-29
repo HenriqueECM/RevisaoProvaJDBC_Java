@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MaquinaDAO {
     public void inserirMaquina(Maquina maquina){
@@ -45,5 +47,22 @@ public class MaquinaDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Maquina> listarMaquinaOperacional(){
+        String query = """
+                    SELECT id, nome, setor, status
+                    FROM Maquina
+                    WHERE status = 'OPERACIONAL'
+                """;
+
+        List<Maquina> maquinaList = new ArrayList<>();
+
+
+        try(Con){
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 }
