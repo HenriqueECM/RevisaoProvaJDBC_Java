@@ -3,10 +3,9 @@ package org.example.dao;
 import org.example.Conexao;
 import org.example.model.OrdemManutencao;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrdemManutencaoDAO {
     public void inserirOrdemM(OrdemManutencao ordemM){
@@ -26,5 +25,31 @@ public class OrdemManutencaoDAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
+    }
+
+    public List<OrdemManutencao> listarOrdemManutencaoPendentes (){
+        String query = "SELECT id, idMaquina, idTecnico, dataSolicitacao, status FROM OrdemManutencao WHERE status = 'PENDENTE'";
+
+        List<OrdemManutencao> ordemManutencaoList = new ArrayList<>();
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                int id = rs.getInt("id");
+                int idMaquina = rs.getInt("idMaquina");
+                int idTecnico = rs.getInt("idTecnico");
+                Date dataSolicitacao = rs.getDate("dataSolicitacao");
+                String status = rs.getString("status");
+
+                OrdemManutencao ordemManutencao = new OrdemManutencao(id, idMaquina, idTecnico, dataSolicitacao.toLocalDate(), status);
+                ordemManutencaoList.add(ordemManutencao);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return  ordemManutencaoList;
     }
 }

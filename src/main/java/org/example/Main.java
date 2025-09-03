@@ -1,13 +1,8 @@
 package org.example;
 
-import org.example.dao.MaquinaDAO;
-import org.example.dao.OrdemManutencaoDAO;
-import org.example.dao.PecaDAO;
-import org.example.dao.TecnicoDAO;
-import org.example.model.Maquina;
-import org.example.model.OrdemManutencao;
-import org.example.model.Peca;
-import org.example.model.Tecnico;
+import com.sun.security.jgss.GSSUtil;
+import org.example.dao.*;
+import org.example.model.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -62,6 +57,10 @@ public class Main {
                 ordemManutencao();
                 break;
             }
+            case 5: {
+                associarPecaOrdem();
+                break;
+            }
             case 0: {
                 sair = true;
                 System.out.println("Sistema Finalizando...");
@@ -70,6 +69,86 @@ public class Main {
         }
         if (!sair){
             menu();
+        }
+    }
+
+    private static void associarPecaOrdem() {
+        List<Integer> opcoesOrdem = new ArrayList<>();
+        OrdemManutencaoDAO ordemManutencaoDAO = new OrdemManutencaoDAO();
+        List<OrdemManutencao> ordemManutencaoList = ordemManutencaoDAO.listarOrdemManutencaoPendentes();
+        for (OrdemManutencao ordemManutencao : ordemManutencaoList){
+            System.out.println("--------- Ordem de Manutenção ---------\n" +
+                    " | ID: " + ordemManutencao.getId() +
+                    " | ID MÁQUINA: " + ordemManutencao.getIdMaquina() +
+                    " | ID TÉCNICO: " + ordemManutencao.getIdTecnico() +
+                    " | DATA SOLICITAÇÃO: " + ordemManutencao.getDataSolicitacao() +
+                    " | STATUS: " + ordemManutencao.getStatus() +
+                    "\n--------------------------------------");
+            opcoesOrdem.add(ordemManutencao.getId());
+        }
+        System.out.println("Digite o ID da ordem para selecionar: ");
+        int idOrdem = SC.nextInt();
+        SC.nextLine();
+
+        if (opcoesOrdem.contains(idOrdem)){
+
+            boolean sair = false;
+
+            while (!sair){
+                List<Integer> opcoesPeca = new ArrayList<>();
+                PecaDAO pecaDao = new PecaDAO();
+                List<Peca> pecaList = pecaDao.listarTodasPecas();
+                OrdemPecaDAO ordemPecaDAO = new OrdemPecaDAO();
+
+
+                for (Peca peca : pecaList){
+                    System.out.println("-------- PEÇAS --------\n" +
+                            " | ID: " + peca.getId() +
+                            " | NOME: " + peca.getNome() +
+                            " | ESTOQUE: " + peca.getEstoque() +
+                            "\n-----------------------");
+                    opcoesPeca.add(peca.getId());
+                }
+
+                System.out.println("Digite o ID da peça para selecionar: ");
+                int idPeca = SC.nextInt();
+                SC.nextLine();
+
+                boolean pecaOrdemExiste = ordemPecaDAO.buscarExistencia(idOrdem, idPeca);
+
+                // verificar opção valida e verificar se os dois já estão cadastrados
+                if(opcoesPeca.contains(idPeca) && !pecaOrdemExiste){
+                    System.out.println("Digite a quantidade da peça que será utilizada");
+                    double quantidade = SC.nextDouble();
+                    SC.nextLine();
+
+                    double quantidadeEstoque = 0;
+                    for (Peca peca : pecaList){
+                        if (idPeca == peca.getId()){
+                            quantidadeEstoque = peca.getEstoque();
+                        }
+                    }
+
+                    if (quantidadeEstoque >= quantidade && quantidade > 0){
+                        OrdemPeca ordemPeca = new OrdemPeca(idOrdem, idPeca, quantidade);
+                        ordemPecaDAO.inserirOrdemPeca(ordemPeca);
+
+                        System.out.println("Deseja adicionar mais uma peça à ordem? \n1 - Sim\n2 - Não");
+                        int opcaoSair = SC.nextInt();
+                        SC.nextLine();
+
+                        if (opcaoSair == 2){
+                            sair = true;
+                        } else {
+                            associarPecaOrdem();
+                        }
+                    } else {
+                        System.out.println("Quantidade inválida. Insira um número possível!");
+                    }
+                } else {
+                    System.out.println("Opção inválida!");
+                }
+            }
         }
     }
 
