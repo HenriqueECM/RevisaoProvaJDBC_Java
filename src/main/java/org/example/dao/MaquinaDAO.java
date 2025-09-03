@@ -58,10 +58,38 @@ public class MaquinaDAO {
 
         List<Maquina> maquinaList = new ArrayList<>();
 
+        try(Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
 
-        try(Con){
+            ResultSet rs = stmt.executeQuery();
 
+            while (rs.next()){
+                int id = rs.getInt("id");
+                String nome = rs.getString("nome");
+                String setor = rs.getString("setor");
+                String status = rs.getString("status");
+
+                Maquina maquina = new Maquina(id, nome, setor, status);
+                maquinaList.add(maquina);
+            }
         }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return  maquinaList;
+    }
+
+    public void atualizarStatus (int id, String status){
+        String query = "UPDATE Maquina SET status = ? WHERE id = ?";
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            stmt.setString(1, status);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
+
+            System.out.println("Status da máquina ID: " + id + " atualizado para " + status);
+        } catch (SQLException e){
             e.printStackTrace();
         }
     }

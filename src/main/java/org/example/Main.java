@@ -1,12 +1,17 @@
 package org.example;
 
 import org.example.dao.MaquinaDAO;
+import org.example.dao.OrdemManutencaoDAO;
 import org.example.dao.PecaDAO;
 import org.example.dao.TecnicoDAO;
 import org.example.model.Maquina;
+import org.example.model.OrdemManutencao;
 import org.example.model.Peca;
 import org.example.model.Tecnico;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -69,7 +74,56 @@ public class Main {
     }
 
     private static void ordemManutencao() {
+        List<Integer> opcoesMaquina = new ArrayList<>();
+        MaquinaDAO maquinaDao = new MaquinaDAO();
+        List<Maquina> maquina = maquinaDao.listarMaquinaOperacional();
+        for (Maquina m : maquina){
+            System.out.println("----------- Máquina -----------\n" +
+                    " | ID: " + m.getId() +
+                    " | NOME: " + m.getNome() +
+                    " | SETOR: " + m.getSetor() +
+                    " | STATUS: " + m.getStatus() +
+                    "\n-------------------------------");
+            opcoesMaquina.add(m.getId());
+        }
+        System.out.println("Digite o ID da máquina para selecionar: ");
+        int idMaquina = SC.nextInt();
 
+        if (opcoesMaquina.contains(idMaquina)){
+            List<Integer> opcoesTecnico = new ArrayList<>();
+            TecnicoDAO tecnicoDao = new TecnicoDAO();
+            List<Tecnico> tecnicoList = tecnicoDao.listarTodosTecnicos();
+
+            for (Tecnico tecnico : tecnicoList){
+                System.out.println("------- Técnicos -------\n" +
+                        " | ID: " + tecnico.getId() +
+                        " | NOME: " + tecnico.getNome() +
+                        " | ESPECIALIDADE: " + tecnico.getEspecialidade() +
+                        "------------------------");
+                opcoesTecnico.add(tecnico.getId());
+            }
+
+            System.out.println("Digite o ID do técnico para selecionar: ");
+            int idTecnico = SC.nextInt();
+
+            if (opcoesTecnico.contains(idTecnico)){
+                OrdemManutencaoDAO ordemManutencaoDAO = new OrdemManutencaoDAO();
+                OrdemManutencao ordemManutencao = new OrdemManutencao(idMaquina, idTecnico, LocalDate.now(), "PENDENTE");
+
+                try {
+                    ordemManutencaoDAO.inserirOrdemM(ordemManutencao);
+                    maquinaDao.atualizarStatus(idMaquina, "EM_MANUTENCAO");
+                } catch (RuntimeException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Não existe esse ID! Digite outro ID do técnico.");
+                ordemManutencao();
+            }
+        } else {
+            System.out.println("Não existe esse ID! Digite outro ID da máquina.");
+            ordemManutencao();
+        }
     }
 
     private static void cadastrarPeca() {

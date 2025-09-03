@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TecnicoDAO {
     public void inserirTecnico(Tecnico tecnico) {
@@ -48,5 +50,28 @@ public class TecnicoDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Tecnico> listarTodosTecnicos (){
+        String query = "SELECT id, nome, especialidade FROM Tecnico";
+
+        List<Tecnico> tecnicoList = new ArrayList<>();
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                int id = rs.getInt("id");
+                String nome = rs.getString("nome");
+                String especialidade = rs.getString("especialidade");
+                Tecnico tecnico = new Tecnico(id, nome, especialidade);
+                tecnicoList.add(tecnico);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return  tecnicoList;
     }
 }
