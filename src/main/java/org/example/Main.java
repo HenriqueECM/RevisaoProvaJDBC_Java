@@ -61,6 +61,10 @@ public class Main {
                 associarPecaOrdem();
                 break;
             }
+            case 6: {
+                executarManutencao();
+                break;
+            }
             case 0: {
                 sair = true;
                 System.out.println("Sistema Finalizando...");
@@ -70,6 +74,27 @@ public class Main {
         if (!sair){
             menu();
         }
+    }
+
+    private static void executarManutencao() {
+        List<Integer> opcoesOrdem = new ArrayList<>();
+        OrdemManutencaoDAO ordemManutencaoDAO = new OrdemManutencaoDAO();
+        List<OrdemManutencao> ordemManutencaoList = ordemManutencaoDAO.listarOrdemManutencaoPendentes();
+
+        for (OrdemManutencao ordemManutencao : ordemManutencaoList){
+            System.out.println("--------- Ordem de Manutenção ---------\n" +
+                    " | ID: " + ordemManutencao.getId() +
+                    " | ID MÁQUINA: " + ordemManutencao.getIdMaquina() +
+                    " | ID TÉCNICO: " + ordemManutencao.getIdTecnico() +
+                    " | DATA SOLICITAÇÃO: " + ordemManutencao.getDataSolicitacao() +
+                    " | STATUS: " + ordemManutencao.getStatus() +
+                    "\n--------------------------------------");
+            opcoesOrdem.add(ordemManutencao.getId());
+        }
+        System.out.println("Digite o id da ordem para executar manutenção: ");
+        int idOrdem = SC.nextInt();
+        SC.nextLine();
+
     }
 
     private static void associarPecaOrdem() {
@@ -137,10 +162,8 @@ public class Main {
                         int opcaoSair = SC.nextInt();
                         SC.nextLine();
 
-                        if (opcaoSair == 2){
+                        if (opcaoSair == 2) {
                             sair = true;
-                        } else {
-                            associarPecaOrdem();
                         }
                     } else {
                         System.out.println("Quantidade inválida. Insira um número possível!");
