@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PecaDAO {
     public void inserirPeca(Peca peca){
@@ -46,5 +48,29 @@ public class PecaDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Peca> listarTodasPecas (){
+        String query = "SELECT id, nome, estoque FROM Peca";
+
+        List<Peca> pecaList = new ArrayList<>();
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                int id = rs.getInt("id");
+                String nome = rs.getString("nome");
+                double estoque = rs.getDouble("estoque");
+
+                Peca peca = new Peca(id, nome, estoque);
+                pecaList.add(peca);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return pecaList;
     }
 }
