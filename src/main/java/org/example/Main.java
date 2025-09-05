@@ -5,9 +5,7 @@ import org.example.dao.*;
 import org.example.model.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
@@ -30,6 +28,7 @@ public class Main {
                 4 - Criar Ordem de Manutenção
                 5 - Associar Peças à Ordem
                 6 - Executar Manutenção
+                7 - Listar Todas Peças
                     
                 0 - Sair
                 Escolha uma operação:""");
@@ -65,6 +64,10 @@ public class Main {
                 executarManutencao();
                 break;
             }
+            case 7: {
+                listarEstoquePecas();
+                break;
+            }
             case 0: {
                 sair = true;
                 System.out.println("Sistema Finalizando...");
@@ -76,8 +79,22 @@ public class Main {
         }
     }
 
+    private static void listarEstoquePecas() {
+        PecaDAO pecaDAO = new PecaDAO();
+        List<Peca> pecaList = pecaDAO.listarTodasPecas();
+
+        for (Peca peca : pecaList){
+            System.out.println("-------- PEÇAS --------\n" +
+                    " | ID: " + peca.getId() +
+                    " | NOME: " + peca.getNome() +
+                    " | ESTOQUE: " + peca.getEstoque() +
+                    "\n-----------------------");
+        }
+    }
+
     private static void executarManutencao() {
         List<Integer> opcoesOrdem = new ArrayList<>();
+        MaquinaDAO maquinaDao = new MaquinaDAO();
         OrdemManutencaoDAO ordemManutencaoDAO = new OrdemManutencaoDAO();
         List<OrdemManutencao> ordemManutencaoList = ordemManutencaoDAO.listarOrdemManutencaoPendentes();
 
@@ -95,6 +112,50 @@ public class Main {
         int idOrdem = SC.nextInt();
         SC.nextLine();
 
+        // vou armazenar valores duplos mas não chaves duplos, ou seja vai ser armazenado id e estoque
+        Map<Integer, Double> atualizacoes = new HashMap<>();
+
+        PecaDAO pecaDao = new PecaDAO();
+        OrdemPecaDAO ordemPecaDao = new OrdemPecaDAO();
+
+        // aqui estou validando a opção selecionada
+        if (opcoesOrdem.contains(idOrdem)){
+            List<OrdemPeca> ordemPecaList = ordemPecaDao.buscaOrdemPecaPorId(idOrdem);
+
+            // fazendo loop para interar lista para verificar estoque
+            for(OrdemPeca ordemPeca : ordemPecaList){
+                // vou verificar id da peça atraves do loop da ordemPeca e pegar o estqque e salvar na variavel declarada
+                double estoque = pecaDao.verificarEstoquePecaPorId(ordemPeca.getIdPeca());
+                // fazer comparação se a quantidade de peça da ordemPeca é suficiente para manutenção em relação quantidade no estoque
+                if (estoque >= ordemPeca.getQuantidade()){
+                    // vou trazer uma lista nova onde vai armazenar o id da peça e o novo estoque atualizado
+                    atualizacoes.put(ordemPeca.getIdPeca(), (estoque - ordemPeca.getQuantidade()));
+                } else {
+                    System.out.println("Estoque insuficiente para realizar manutenção!");
+                    executarManutencao();
+                }
+            }
+            // aqui vou interar a lista do Map atualizações e dar entrada de dados que coletei no forEach anterior e
+            // atualizar o estoque atravez do metodo UPDATE no DAO
+            for (Map.Entry<Integer, Double> executar : atualizacoes.entrySet()){
+                pecaDao.atualizarEstoque(executar.getKey(), executar.getValue());
+            }
+
+            // atulizar status da ordem
+            ordemManutencaoDAO.atualizarStatus(idOrdem);
+
+            int idMaquina = 0;
+
+            for (OrdemManutencao ordemM : ordemManutencaoList){
+                if (ordemM.getId() == idOrdem){
+                    idMaquina = ordemM.getIdMaquina();
+                }
+            }
+            maquinaDao.atualizarStatusParaOperacional(idMaquina, "OPERACIONAL");
+        } else {
+            System.out.println("Opção inválida!");
+            executarManutencao();
+        }
     }
 
     private static void associarPecaOrdem() {
