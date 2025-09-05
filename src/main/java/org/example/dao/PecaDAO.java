@@ -73,4 +73,42 @@ public class PecaDAO {
         }
         return pecaList;
     }
+
+    public Double verificarEstoquePecaPorId(int idPeca){
+        String query = "SELECT estoque FROM Peca WHERE id = ?";
+
+        double quantidade = 0;
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            stmt.setInt(1, idPeca);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()){
+                quantidade = rs.getDouble("estoque");
+
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return quantidade;
+    }
+
+    public void atualizarEstoque (int id, double estoque){
+        String query = "UPDATE Peca SET estoque = ? WHERE id = ?";
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            stmt.setDouble(1, estoque);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
+
+            System.out.println("Estoque de peça ID " + id + " atualizado");
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
 }

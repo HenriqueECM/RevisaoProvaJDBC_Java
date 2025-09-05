@@ -93,4 +93,20 @@ public class MaquinaDAO {
             e.printStackTrace();
         }
     }
+
+    public void atualizarStatusParaOperacional (int id, String status){
+        String query = "UPDATE Maquina SET status = ? WHERE id = ?";
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            stmt.setString(1, status);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
+
+            System.out.println("Máquina de ID " + id + " alterado para " + status);
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
 }
